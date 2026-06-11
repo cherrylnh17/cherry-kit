@@ -1,0 +1,29 @@
+{
+  "name": "cherry-kit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Starter kit generator for ready-to-use UMKM websites.",
+  "packageManager": "pnpm@10.0.0",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "typecheck": "turbo typecheck",
+    "lint": "turbo lint",
+    "clean": "turbo clean && rimraf node_modules"
+  },
+  "keywords": [
+    "starter-kit",
+    "nextjs",
+    "umkm",
+    "landing-page",
+    "cli",
+    "generator"
+  ],
+  "author": "Luqman Nur Hakim",
+  "license": "MIT",
+  "devDependencies": {
+    "rimraf": "^6.0.1",
+    "turbo": "^2.5.0",
+    "typescript": "^5.8.0"
+  }
+}
