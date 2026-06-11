@@ -3,8 +3,8 @@
 import * as p from "@clack/prompts";
 import chalk from "chalk";
 import { scaffold } from "./scaffold.js";
-import type { ScaffoldConfig } from "./scaffold.js";
 import { validateProjectName } from "./utils.js";
+import type { ScaffoldConfig } from "./types.js";
 
 async function main() {
   console.clear();
@@ -43,41 +43,21 @@ async function main() {
           message: "Pilih auth:",
           options: [
             {
-              value: "both",
-              label: "Google + Email"
-            },
-            {
-              value: "google",
-              label: "Google saja"
+              value: "none",
+              label: "Tanpa auth"
             },
             {
               value: "email",
-              label: "Email saja"
+              label: "Email"
+            },
+            {
+              value: "google-email",
+              label: "Google + Email"
             }
           ]
         }),
 
-      packageManager: () =>
-        p.select({
-          message: "Pilih package manager:",
-          options: [
-            {
-              value: "pnpm",
-              label: "pnpm",
-              hint: "rekomendasi"
-            },
-            {
-              value: "npm",
-              label: "npm"
-            },
-            {
-              value: "yarn",
-              label: "yarn"
-            }
-          ]
-        }),
-
-      runInstall: () =>
+      install: () =>
         p.confirm({
           message: "Install dependencies sekarang?",
           initialValue: true
@@ -91,41 +71,17 @@ async function main() {
     }
   );
 
-  const spinner = p.spinner();
-
-  spinner.start("Membuat project...");
-
-  const scaffoldConfig: ScaffoldConfig = {
-    projectName: config.projectName,
-    language: config.language as ScaffoldConfig["language"],
-    auth: config.auth as ScaffoldConfig["auth"],
-    packageManager: config.packageManager as ScaffoldConfig["packageManager"],
-    runInstall: config.runInstall
-  };
-
-  await scaffold(scaffoldConfig);
-
-  spinner.stop("Project berhasil dibuat.");
-
- const devCommand =
-  scaffoldConfig.packageManager === "npm"
-    ? "npm run dev"
-    : `${scaffoldConfig.packageManager} dev`;
-
-  p.outro(`
-Selesai.
-
-Database default: Supabase
-
-Langkah berikutnya:
-
-  cd ${scaffoldConfig.projectName}
-  cp .env.example .env
-  ${devCommand}
-`);
+  await scaffold(config as ScaffoldConfig);
 }
 
 main().catch((error) => {
-  console.error(error);
+  p.cancel("Terjadi error.");
+
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(error);
+  }
+
   process.exit(1);
 });

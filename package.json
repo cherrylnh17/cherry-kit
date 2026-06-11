@@ -3,13 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "description": "Starter kit generator for ready-to-use UMKM websites.",
-  "packageManager": "pnpm@10.0.0",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "turbo dev",
-    "build": "turbo build",
-    "typecheck": "turbo typecheck",
-    "lint": "turbo lint",
-    "clean": "turbo clean && rimraf node_modules"
+    "dev": "npm run dev --workspace=create-cherry-app",
+    "build": "npm run build --workspace=create-cherry-app",
+    "start": "node packages/create-cherry-app/dist/index.js",
+    "typecheck": "npm run typecheck --workspace=create-cherry-app",
+    "clean": "rimraf node_modules package-lock.json",
+    "clean:package": "rimraf packages/create-cherry-app/node_modules packages/create-cherry-app/dist"
   },
   "keywords": [
     "starter-kit",
@@ -22,8 +25,6 @@
   "author": "Luqman Nur Hakim",
   "license": "MIT",
   "devDependencies": {
-    "rimraf": "^6.0.1",
-    "turbo": "^2.5.0",
-    "typescript": "^5.8.0"
+    "rimraf": "^6.0.1"
   }
 }

@@ -1,26 +1,28 @@
-export function slugifyProjectName(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-_]/g, "")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
 export function validateProjectName(value: string) {
-  const name = slugifyProjectName(value);
-
-  if (!name) {
-    return "Nama project tidak boleh kosong.";
+  if (!value || value.trim().length === 0) {
+    return "Nama project wajib diisi.";
   }
 
-  if (name.length < 2) {
-    return "Nama project terlalu pendek.";
+  const name = value.trim();
+
+  if (name.length > 214) {
+    return "Nama project terlalu panjang.";
+  }
+
+  if (name.toLowerCase() !== name) {
+    return "Gunakan huruf kecil, contoh: toko-batik.";
+  }
+
+  if (name.includes(" ")) {
+    return "Nama project tidak boleh memakai spasi. Gunakan tanda strip, contoh: toko-batik.";
   }
 
   if (!/^[a-z0-9-_]+$/.test(name)) {
-    return "Gunakan huruf kecil, angka, dash, atau underscore.";
+    return "Nama project hanya boleh berisi huruf kecil, angka, strip, atau underscore.";
+  }
+
+  if (name.startsWith(".") || name.startsWith("_")) {
+    return "Nama project tidak boleh diawali titik atau underscore.";
   }
 
   return undefined;
