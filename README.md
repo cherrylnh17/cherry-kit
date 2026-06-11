@@ -29,6 +29,8 @@ cherry-kit/
 Install dependency:
 
 ```bash
+npm install -g pnpm
+
 pnpm install
 ```
 

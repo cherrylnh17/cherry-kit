@@ -3,16 +3,17 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { runInstall } from "./runner.js";
 import { slugifyProjectName } from "./utils.js";
+import { writeAuthConfig } from "./auth.js";
+import { writeSupabaseConfig } from "./supabase.js";
+import { transformToJavaScript } from "./transform.js";
 
 export type Language = "ts" | "js";
-export type Database = "sqlite" | "mysql" | "supabase";
 export type AuthProvider = "both" | "google" | "email";
 export type PackageManager = "pnpm" | "npm" | "yarn";
 
 export interface ScaffoldConfig {
   projectName: string;
   language: Language;
-  database: Database;
   auth: AuthProvider;
   packageManager: PackageManager;
   runInstall: boolean;
@@ -36,8 +37,15 @@ export async function scaffold(config: ScaffoldConfig) {
   }
 
   await fs.copy(templateDir, dest);
+
   await writePackageJson(dest, projectName);
+  await writeSupabaseConfig(dest);
+  await writeAuthConfig(dest, config.auth);
   await writeCherryConfig(dest, config);
+
+  if (config.language === "js") {
+    await transformToJavaScript(dest);
+  }
 
   if (config.runInstall) {
     await runInstall(dest, config.packageManager);
@@ -63,7 +71,7 @@ async function writeCherryConfig(dest: string, config: ScaffoldConfig) {
   const content = `export const cherryConfig = {
   projectName: "${slugifyProjectName(config.projectName)}",
   language: "${config.language}",
-  database: "${config.database}",
+  database: "supabase",
   auth: "${config.auth}"
 } as const;
 `;

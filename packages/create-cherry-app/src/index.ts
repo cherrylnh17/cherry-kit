@@ -3,6 +3,7 @@
 import * as p from "@clack/prompts";
 import chalk from "chalk";
 import { scaffold } from "./scaffold.js";
+import type { ScaffoldConfig } from "./scaffold.js";
 import { validateProjectName } from "./utils.js";
 
 async function main() {
@@ -33,27 +34,6 @@ async function main() {
             {
               value: "js",
               label: "JavaScript"
-            }
-          ]
-        }),
-
-      database: () =>
-        p.select({
-          message: "Pilih database:",
-          options: [
-            {
-              value: "sqlite",
-              label: "SQLite",
-              hint: "lokal/dev ringan"
-            },
-            {
-              value: "mysql",
-              label: "MySQL"
-            },
-            {
-              value: "supabase",
-              label: "Supabase",
-              hint: "PostgreSQL"
             }
           ]
         }),
@@ -114,17 +94,34 @@ async function main() {
   const spinner = p.spinner();
 
   spinner.start("Membuat project...");
-  await scaffold(config);
+
+  const scaffoldConfig: ScaffoldConfig = {
+    projectName: config.projectName,
+    language: config.language as ScaffoldConfig["language"],
+    auth: config.auth as ScaffoldConfig["auth"],
+    packageManager: config.packageManager as ScaffoldConfig["packageManager"],
+    runInstall: config.runInstall
+  };
+
+  await scaffold(scaffoldConfig);
+
   spinner.stop("Project berhasil dibuat.");
+
+ const devCommand =
+  scaffoldConfig.packageManager === "npm"
+    ? "npm run dev"
+    : `${scaffoldConfig.packageManager} dev`;
 
   p.outro(`
 Selesai.
 
+Database default: Supabase
+
 Langkah berikutnya:
 
-  cd ${config.projectName}
+  cd ${scaffoldConfig.projectName}
   cp .env.example .env
-  ${config.packageManager} dev
+  ${devCommand}
 `);
 }
 
