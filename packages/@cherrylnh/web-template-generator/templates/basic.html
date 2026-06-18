@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="{{language}}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <meta name="description" content="{{description}}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background-color: {{primaryColor}};
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        
+        nav a:hover {
+            opacity: 0.8;
+        }
+        
+        .hero {
+            background: linear-gradient(135deg, {{primaryColor}}, {{secondaryColor}});
+            color: white;
+            padding: 4rem 0;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: white;
+            color: {{primaryColor}};
+            padding: 0.8rem 2rem;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        section {
+            padding: 4rem 0;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: {{primaryColor}};
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-card h3 {
+            color: {{primaryColor}};
+            margin-bottom: 1rem;
+        }
+        
+        footer {
+            background-color: #333;
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            nav ul {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">{{companyName}}</div>
+            <nav>
+                <ul>
+                    <li><a href="#home">{{home}}</a></li>
+                    <li><a href="#about">{{about}}</a></li>
+                    <li><a href="#services">{{services}}</a></li>
+                    <li><a href="#contact">{{contact}}</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero" id="home">
+        <div class="container">
+            <h1>{{welcome}}</h1>
+            <p>{{description}}</p>
+            <a href="#contact" class="btn">{{get_started}}</a>
+        </div>
+    </section>
+
+    {{if about}}
+    <section id="about">
+        <div class="container">
+            <h2 class="section-title">{{about}}</h2>
+            <div class="features">
+                <div class="feature-card">
+                    <h3>{{about}} 1</h3>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>{{about}} 2</h3>
+                    <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>{{about}} 3</h3>
+                    <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    {{endif}}
+
+    {{if services}}
+    <section id="services">
+        <div class="container">
+            <h2 class="section-title">{{services}}</h2>
+            <div class="features">
+                <div class="feature-card">
+                    <h3>{{services}} 1</h3>
+                    <p>Professional web design and development services tailored to your business needs.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>{{services}} 2</h3>
+                    <p>Digital marketing solutions to help your business grow and reach more customers.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>{{services}} 3</h3>
+                    <p>Consulting services to optimize your online presence and business operations.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    {{endif}}
+
+    {{if contact}}
+    <section id="contact">
+        <div class="container">
+            <h2 class="section-title">{{contact_us}}</h2>
+            <div style="max-width: 600px; margin: 0 auto;">
+                <form id="contactForm" style="display: grid; gap: 1rem;">
+                    <input type="text" name="name" placeholder="{{name}}" required style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 5px;">
+                    <input type="email" name="email" placeholder="{{email}}" required style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 5px;">
+                    <textarea name="message" placeholder="{{message}}" rows="5" required style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                    <button type="submit" class="btn" style="background-color: {{primaryColor}}; color: white; border: none; cursor: pointer;">{{send}}</button>
+                </form>
+            </div>
+        </div>
+    </section>
+    {{endif}}
+
+    <footer>
+        <div class="container">
+            <p>{{footer}}</p>
+            <p>{{contact}}: {{contactEmail}} | {{phone}}: {{contactPhone}}</p>
+            {{if address}}<p>{{address}}: {{address}}</p>{{endif}}
+            <div style="margin-top: 1rem;">
+                {{if socialMedia.facebook}}<a href="{{socialMedia.facebook}}" style="color: white; margin: 0 10px;">Facebook</a>{{endif}}
+                {{if socialMedia.twitter}}<a href="{{socialMedia.twitter}}" style="color: white; margin: 0 10px;">Twitter</a>{{endif}}
+                {{if socialMedia.instagram}}<a href="{{socialMedia.instagram}}" style="color: white; margin: 0 10px;">Instagram</a>{{endif}}
+                {{if socialMedia.linkedin}}<a href="{{socialMedia.linkedin}}" style="color: white; margin: 0 10px;">LinkedIn</a>{{endif}}
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('{{thank_you}}');
+            this.reset();
+        });
+    </script>
+</body>
+</html>
