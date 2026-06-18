@@ -1,9 +1,87 @@
-import { TemplateData, TemplateConfig, GeneratedTemplate, ThreeJSConfig, ThreeJSModelType } from './types';
+import {
+  TemplateData,
+  TemplateConfig,
+  GeneratedTemplate,
+  ThreeJSConfig,
+  ThreeJSModelType,
+  TemplateError
+} from './types';
 import { TemplateEngine } from './template-engine';
 import { Localization } from './localization';
 import { ThreeJSModule } from './threejs';
 import * as path from 'path';
 import * as fs from 'fs';
+
+// ─── Validation helpers ───────────────────────────────────────────────────────
+
+const SUPPORTED_LANGUAGES: ReadonlyArray<string> = ['id', 'en'];
+const SUPPORTED_TEMPLATES: ReadonlyArray<string> = ['basic', 'business', 'portfolio', 'landing'];
+
+/**
+ * Validasi bahasa yang dipilih user
+ */
+function validateLanguage(language: string): asserts language is 'id' | 'en' {
+  if (!language) {
+    throw new TemplateError(
+      'Language is required. Use "id" for Indonesian or "en" for English.',
+      'INVALID_LANGUAGE'
+    );
+  }
+  if (!SUPPORTED_LANGUAGES.includes(language)) {
+    throw new TemplateError(
+      `Unsupported language: "${language}". Supported languages: ${SUPPORTED_LANGUAGES.join(', ')}`,
+      'INVALID_LANGUAGE'
+    );
+  }
+}
+
+/**
+ * Validasi tipe template
+ */
+function validateTemplateType(templateType: string): asserts templateType is TemplateConfig['templateType'] {
+  if (!templateType) {
+    throw new TemplateError(
+      'Template type is required. Supported types: ' + SUPPORTED_TEMPLATES.join(', '),
+      'INVALID_TEMPLATE_TYPE'
+    );
+  }
+  if (!SUPPORTED_TEMPLATES.includes(templateType)) {
+    throw new TemplateError(
+      `Unsupported template type: "${templateType}". Supported types: ${SUPPORTED_TEMPLATES.join(', ')}`,
+      'INVALID_TEMPLATE_TYPE'
+    );
+  }
+}
+
+/**
+ * Validasi konfigurasi Three.js — memastikan model yang dipilih user tersedia
+ */
+function validateThreeJSConfig(threeJS: ThreeJSConfig): void {
+  if (!threeJS.enable) return;
+
+  const supportedModels = ThreeJSModule.getAvailableModels();
+  if (!supportedModels.includes(threeJS.model)) {
+    throw new TemplateError(
+      `Unsupported 3D model: "${threeJS.model}". ` +
+      `Supported models: ${supportedModels.join(', ')}`,
+      'INVALID_THREEJS_MODEL'
+    );
+  }
+}
+
+/**
+ * Validasi seluruh input sebelum generate
+ */
+function validateInput(config: TemplateConfig): void {
+  validateLanguage(config.language);
+  validateTemplateType(config.templateType);
+
+  if (config.threeJS) {
+    validateThreeJSConfig(config.threeJS);
+  }
+}
+
+// ─── WebTemplateGenerator class ───────────────────────────────────────────────
 
 export class WebTemplateGenerator {
   private config: TemplateConfig;
@@ -25,8 +103,10 @@ export class WebTemplateGenerator {
     };
   }
 
+  // ── Fluent setters ──────────────────────────────────────────────────────────
+
   /**
-   * Set data untuk template
+   * Set data untuk template (data di-merge dengan data sebelumnya)
    */
   setData(data: TemplateData): this {
     this.data = { ...this.data, ...data };
@@ -42,7 +122,7 @@ export class WebTemplateGenerator {
   }
 
   /**
-   * Set bahasa untuk template
+   * Set bahasa untuk template ('id' | 'en')
    */
   setLanguage(language: 'id' | 'en'): this {
     this.config.language = language;
@@ -86,29 +166,71 @@ export class WebTemplateGenerator {
   }
 
   /**
-   * Generate template HTML
+   * Set target DOM element ID untuk rendering langsung di browser
+   */
+  setDomTarget(elementId: string): this {
+    this.config.domTarget = elementId;
+    return this;
+  }
+
+  // ── Core generation ─────────────────────────────────────────────────────────
+
+  /**
+   * Generate template HTML.
+   *
+   * Alur:
+   * 1. Validasi semua input (bahasa, template type, model Three.js)
+   * 2. Terapkan i18n — ganti teks statis sesuai bahasa yang dipilih user
+   * 3. Sisipkan komponen Three.js (jika diaktifkan) ke layout HTML
+   * 4. Hasilkan output: HTML string, dan opsional CSS/JS terpisah
    */
   generate(): GeneratedTemplate {
-    // Validasi data dan konfigurasi
-    this.validateInput();
+    // ── 1. Validasi ────────────────────────────────────────────────────────
+    try {
+      validateInput(this.config);
+    } catch (error) {
+      // Re-throw TemplateError langsung, wrap error lain
+      if (error instanceof TemplateError) {
+        throw error;
+      }
+      throw new TemplateError(
+        `Validation failed: ${(error as Error).message}`,
+        'VALIDATION_ERROR'
+      );
+    }
 
-    // Generate HTML
-    const html = TemplateEngine.generateHTMLFile(this.data, this.config);
-    
-    // Generate CSS dan JS terpisah jika diperlukan
+    // ── 2. Generate HTML (termasuk i18n & Three.js injection) ─────────────
+    let html: string;
+    try {
+      html = TemplateEngine.generateHTMLFile(this.data, this.config);
+    } catch (error) {
+      throw new TemplateError(
+        `Failed to generate template: ${(error as Error).message}`,
+        'GENERATION_ERROR'
+      );
+    }
+
+    // ── 3. Generate CSS & JS terpisah jika diminta ────────────────────────
     let css = '';
     let js = '';
     const assets: string[] = [];
 
     if (this.config.includeAssets) {
-      const outputDir = path.dirname(this.config.outputPath);
-      const cssPath = path.join(outputDir, 'styles.css');
-      const jsPath = path.join(outputDir, 'script.js');
+      try {
+        const outputDir = path.dirname(this.config.outputPath);
+        const cssPath = path.join(outputDir, 'styles.css');
+        const jsPath = path.join(outputDir, 'script.js');
 
-      css = TemplateEngine.generateCSSFile(cssPath, this.config.theme);
-      js = TemplateEngine.generateJSFile(jsPath);
-      
-      assets.push(cssPath, jsPath);
+        css = TemplateEngine.generateCSSFile(cssPath, this.config.theme);
+        js = TemplateEngine.generateJSFile(jsPath);
+
+        assets.push(cssPath, jsPath);
+      } catch (error) {
+        throw new TemplateError(
+          `Failed to generate assets: ${(error as Error).message}`,
+          'ASSET_ERROR'
+        );
+      }
     }
 
     return {
@@ -120,12 +242,12 @@ export class WebTemplateGenerator {
   }
 
   /**
-   * Generate dan simpan ke file
+   * Generate template dan simpan ke file
    */
   generateToFile(): GeneratedTemplate {
     const result = this.generate();
-    
-    // Jika assets termasuk, copy template assets jika ada
+
+    // Copy template assets jika ada
     if (this.config.includeAssets) {
       this.copyTemplateAssets();
     }
@@ -134,36 +256,77 @@ export class WebTemplateGenerator {
   }
 
   /**
-   * Validasi input data dan konfigurasi
+   * Generate template dan langsung render ke DOM target (untuk penggunaan di browser).
+   *
+   * @param targetSelector - CSS selector atau element ID dari target container
+   *                        (opsional, jika tidak diisi akan menggunakan config.domTarget)
+   * @returns GeneratedTemplate dengan HTML string
+   *
+   * Catatan: Method ini hanya bisa digunakan di environment browser.
    */
-  private validateInput(): void {
-    if (!this.config.language) {
-      throw new Error('Language is required');
+  renderToDOM(targetSelector?: string): GeneratedTemplate {
+    const result = this.generate();
+
+    // Cek apakah berjalan di browser
+    if (typeof document === 'undefined') {
+      throw new TemplateError(
+        'renderToDOM() only works in browser environment. ' +
+        'Use generate() or generateToFile() for Node.js.',
+        'NOT_BROWSER_ENV'
+      );
     }
 
-    if (!['id', 'en'].includes(this.config.language)) {
-      throw new Error(`Unsupported language: ${this.config.language}. Supported languages: id, en`);
+    // Tentukan target element
+    const selector = targetSelector || this.config.domTarget;
+    if (!selector) {
+      throw new TemplateError(
+        'DOM target is required. Provide a CSS selector via renderToDOM(selector) ' +
+        'or config.domTarget, or use setDomTarget().',
+        'NO_DOM_TARGET'
+      );
     }
 
-    if (!this.config.templateType) {
-      throw new Error('Template type is required');
+    // Cari element target
+    const targetElement = document.querySelector(selector);
+    if (!targetElement) {
+      throw new TemplateError(
+        `DOM target element not found: "${selector}". ` +
+        'Make sure the element exists before calling renderToDOM().',
+        'DOM_TARGET_NOT_FOUND'
+      );
     }
 
-    const supportedTemplates = ['basic', 'business', 'portfolio', 'landing'];
-    if (!supportedTemplates.includes(this.config.templateType)) {
-      throw new Error(`Unsupported template type: ${this.config.templateType}. Supported types: ${supportedTemplates.join(', ')}`);
+    // Render ke DOM
+    targetElement.innerHTML = result.html;
+
+    // Inject CSS ke head jika ada
+    if (result.css) {
+      const existingStyle = document.getElementById('cherry-template-styles');
+      if (existingStyle) {
+        existingStyle.remove();
+      }
+      const styleElement = document.createElement('style');
+      styleElement.id = 'cherry-template-styles';
+      styleElement.textContent = result.css;
+      document.head.appendChild(styleElement);
     }
 
-    // Validasi Three.js config jika diaktifkan
-    if (this.config.threeJS?.enable) {
-      const supportedModels = ThreeJSModule.getAvailableModels();
-      if (!supportedModels.includes(this.config.threeJS.model)) {
-        throw new Error(
-          `Unsupported 3D model: ${this.config.threeJS.model}. Supported models: ${supportedModels.join(', ')}`
-        );
+    // Execute JS jika ada
+    if (result.js) {
+      try {
+        const scriptElement = document.createElement('script');
+        scriptElement.id = 'cherry-template-script';
+        scriptElement.textContent = result.js;
+        document.body.appendChild(scriptElement);
+      } catch (error) {
+        console.warn('Failed to execute template script:', (error as Error).message);
       }
     }
+
+    return result;
   }
+
+  // ── Private helpers ────────────────────────────────────────────────────────
 
   /**
    * Copy template assets ke output directory
@@ -182,6 +345,8 @@ export class WebTemplateGenerator {
     }
   }
 
+  // ── Static helpers ──────────────────────────────────────────────────────────
+
   /**
    * Dapatkan daftar bahasa yang tersedia
    */
@@ -194,7 +359,7 @@ export class WebTemplateGenerator {
    */
   static getAvailableTemplates(): string[] {
     const templatesDir = path.join(__dirname, '..', 'templates');
-    
+
     if (!fs.existsSync(templatesDir)) {
       return [];
     }
@@ -203,6 +368,13 @@ export class WebTemplateGenerator {
     return files
       .filter((file: string) => file.endsWith('.html'))
       .map((file: string) => path.basename(file, '.html'));
+  }
+
+  /**
+   * Dapatkan daftar model Three.js yang tersedia
+   */
+  static getAvailableThreeJSModels(): ThreeJSModelType[] {
+    return ThreeJSModule.getAvailableModels();
   }
 
   /**
@@ -230,14 +402,53 @@ export class WebTemplateGenerator {
   }
 }
 
-// Export utama
+// ─── Exports ──────────────────────────────────────────────────────────────────
+
 export default WebTemplateGenerator;
 
-// Export utilitas
+// Re-export modul internal
 export { TemplateEngine, Localization, ThreeJSModule };
-export type { TemplateData, TemplateConfig, GeneratedTemplate, ThreeJSConfig, ThreeJSModelType };
 
-// Export fungsi helper untuk penggunaan langsung
+// Re-export types
+export type {
+  TemplateData,
+  TemplateConfig,
+  GeneratedTemplate,
+  ThreeJSConfig,
+  ThreeJSModelType
+};
+
+// Re-export error class
+export { TemplateError };
+
+// ─── Fungsi helper top-level ──────────────────────────────────────────────────
+
+/**
+ * Generate template HTML string tanpa menyimpan ke file.
+ *
+ * @param data   - Data kustom dari user (nama, deskripsi, kontak, dll)
+ * @param config - Konfigurasi template (bahasa, tipe, tema, Three.js)
+ * @returns GeneratedTemplate { html, css, js }
+ *
+ * @example
+ * ```typescript
+ * const result = generateTemplate(
+ *   {
+ *     companyName: 'Kopi Nusantara',
+ *     heroTitle: 'Selamat Datang',
+ *     features: [
+ *       { title: 'Biji Pilihan', description: '100% arabika' }
+ *     ]
+ *   },
+ *   {
+ *     language: 'id',
+ *     templateType: 'landing',
+ *     threeJS: { enable: true, model: 'kopi' }
+ *   }
+ * );
+ * console.log(result.html); // Full HTML string
+ * ```
+ */
 export function generateTemplate(
   data: TemplateData,
   config: Partial<TemplateConfig> = {}
@@ -246,10 +457,40 @@ export function generateTemplate(
   return generator.generate();
 }
 
+/**
+ * Generate template dan simpan langsung ke file.
+ */
 export function generateTemplateToFile(
   data: TemplateData,
   config: Partial<TemplateConfig> = {}
 ): GeneratedTemplate {
   const generator = new WebTemplateGenerator(data, config);
   return generator.generateToFile();
+}
+
+/**
+ * Generate template dan render langsung ke DOM target (browser only).
+ *
+ * @param data     - Data kustom dari user
+ * @param config   - Konfigurasi template (harus menyertakan domTarget)
+ * @param target   - CSS selector dari container DOM (opsional, override config.domTarget)
+ * @returns GeneratedTemplate
+ *
+ * @example
+ * ```typescript
+ * // Di browser:
+ * renderToDOM(
+ *   { companyName: 'Toko Saya', heroTitle: 'Halo!' },
+ *   { language: 'id', templateType: 'landing' },
+ *   '#app'
+ * );
+ * ```
+ */
+export function renderToDOM(
+  data: TemplateData,
+  config: Partial<TemplateConfig> = {},
+  target?: string
+): GeneratedTemplate {
+  const generator = new WebTemplateGenerator(data, config);
+  return generator.renderToDOM(target);
 }

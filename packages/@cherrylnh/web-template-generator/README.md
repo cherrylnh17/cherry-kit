@@ -1,387 +1,435 @@
-# Web Template Generator
+# @cherrylnh/web-template-generator
 
-Library JavaScript/TypeScript untuk generate template halaman web dengan fitur multi-bahasa (i18n) dan 3D Three.js.
+> Library generator template halaman web — cukup masukkan data, pilih bahasa, dan dapatkan HTML siap pakai! 🍒
 
-## Fitur
+---
 
-- ✅ **Multi-bahasa support** - Template otomatis tersedia dalam bahasa Indonesia (id) dan Inggris (en)
-- ✅ **Template fleksibel** - Support berbagai tipe template (basic, business, portfolio, landing)
-- ✅ **Customizable** - Warna, font, dan konten dapat disesuaikan
-- ✅ **Conditional rendering** - Support conditional statements dalam template
-- ✅ **Assets generation** - Generate file CSS dan JavaScript terpisah
-- ✅ **Three.js 3D Support** - Integrasi elemen 3D dengan berbagai model (kopi, laptop, buku, logo, abstract, globe)
-- ✅ **TypeScript support** - Full TypeScript definitions
+## ✨ Fitur Utama
 
-## Instalasi
+- **Generate Halaman Web** — Masukkan data kamu, library akan menghasilkan HTML lengkap (dengan CSS & JS).
+- **Multi-Bahasa (i18n)** — Dukungan bahasa **Indonesia (`id`)** dan **English (`en`)**. Semua teks bawaan template otomatis menyesuaikan.
+- **4 Jenis Template** — `basic`, `business`, `portfolio`, `landing`.
+- **Three.js 3D** — Sisipkan model 3D interaktif langsung ke halaman (kopi, laptop, buku, globe, dll).
+- **Customizable Theme** — Ubah warna dan font sesuai brand kamu.
+- **Browser & Node.js** — Bisa dipakai di server (generate file) maupun langsung di browser (render ke DOM).
+
+---
+
+## 📦 Instalasi
 
 ```bash
 npm install @cherrylnh/web-template-generator
 ```
 
-atau
+Atau kalau kamu pakai monorepo:
 
 ```bash
-yarn add @cherrylnh/web-template-generator
+pnpm add @cherrylnh/web-template-generator --filter your-package
 ```
 
-## Penggunaan
+---
 
-### Contoh Dasar
+## 🚀 Penggunaan Dasar
 
-```javascript
-import WebTemplateGenerator from '@cherrylnh/web-template-generator';
+### Paling Simpel — Satu Baris Jadi
 
-// Data untuk template
-const data = {
-  title: 'My Awesome Website',
-  companyName: 'My Company',
-  contactEmail: 'contact@example.com',
-  contactPhone: '+62 812-3456-7890',
-  address: 'Jakarta, Indonesia',
-  socialMedia: {
-    facebook: 'https://facebook.com/mycompany',
-    instagram: 'https://instagram.com/mycompany'
+```typescript
+import { generateTemplate } from '@cherrylnh/web-template-generator';
+
+const result = generateTemplate(
+  {
+    companyName: 'Kopi Nusantara',
+    heroTitle: 'Selamat Datang di Dunia Kopi',
+    heroSubtitle: 'Nikmati cita rasa kopi nusantara terbaik',
+    showHero: true,
+    features: [
+      { title: 'Biji Pilihan', description: '100% arabika lokal' },
+      { title: 'Roasting Segar', description: 'Dipanggang setiap hari' }
+    ]
   },
-  sections: {
-    about: true,
-    services: true,
-    contact: true
+  {
+    language: 'id',         // Pakai bahasa Indonesia
+    templateType: 'landing' // Template landing page
   }
-};
+);
 
-// Konfigurasi
-const config = {
-  language: 'id', // 'id' untuk Indonesia, 'en' untuk English
-  templateType: 'basic',
-  outputPath: './dist/index.html',
-  includeAssets: true,
-  theme: {
-    primaryColor: '#3B82F6',
-    secondaryColor: '#10B981'
-  }
-};
-
-// Generate template
-const generator = new WebTemplateGenerator(data, config);
-const result = generator.generateToFile();
-
-console.log('Template berhasil digenerate!');
-console.log('HTML:', result.html.substring(0, 100) + '...');
+// result.html → String HTML lengkap, siap disimpan atau ditampilkan
+console.log(result.html);
 ```
 
-### Menggunakan Fungsi Helper
+### Fluent API — Method Chaining
 
-```javascript
-import { generateTemplateToFile } from '@cherrylnh/web-template-generator';
+Kalau kamu lebih suka gaya chain, bisa pakai `WebTemplateGenerator` langsung:
 
-const result = generateTemplateToFile(
+```typescript
+import { WebTemplateGenerator } from '@cherrylnh/web-template-generator';
+
+const generator = new WebTemplateGenerator();
+
+const result = generator
+  .setData({
+    companyName: 'Toko Online Saya',
+    heroTitle: 'Belanja Mudah, Hidup Nyaman',
+    showHero: true,
+    features: [
+      { title: 'Produk Original', description: '100% original' },
+      { title: 'Gratis Ongkir', description: 'Min. belanja Rp 100rb' }
+    ]
+  })
+  .setLanguage('id')               // 'id' atau 'en'
+  .setTemplateType('landing')      // 'basic' | 'business' | 'portfolio' | 'landing'
+  .setConfig({
+    outputPath: './output/index.html',
+    theme: {
+      primaryColor: '#E91E63',
+      secondaryColor: '#9C27B0'
+    }
+  })
+  .generate();
+
+console.log(result.html);
+```
+
+### Render Langsung ke DOM (Browser)
+
+```typescript
+import { renderToDOM } from '@cherrylnh/web-template-generator';
+
+renderToDOM(
   {
-    companyName: 'My Startup',
-    contactEmail: 'hello@startup.com'
+    companyName: 'Website Saya',
+    heroTitle: 'Halo Dunia!',
+    showHero: true,
+    features: [
+      { title: 'Cepat', description: 'Performa kilat' },
+      { title: 'Aman', description: 'Keamanan enterprise' }
+    ]
   },
   {
-    language: 'en',
-    templateType: 'basic',
-    outputPath: './public/index.html'
-  }
+    language: 'id',
+    templateType: 'landing'
+  },
+  '#app'  // CSS selector container di HTML kamu
 );
 ```
 
-### Menggunakan Metode Chaining
+---
 
-```javascript
-import WebTemplateGenerator from '@cherrylnh/web-template-generator';
+## ⚙️ Configuration Object
 
-const result = WebTemplateGenerator.create()
-  .setData({
-    companyName: 'My Business',
-    description: 'Solusi terbaik untuk kebutuhan Anda'
-  })
-  .setLanguage('id')
-  .setTemplateType('business')
-  .setOutputPath('./output/website.html')
-  .generateToFile();
-```
-
-### Menggunakan Fitur Three.js 3D
-
-```javascript
-import WebTemplateGenerator from '@cherrylnh/web-template-generator';
-
-// Template dengan elemen 3D model kopi
-const result = WebTemplateGenerator.create()
-  .setData({
-    companyName: 'Coffee Shop',
-    description: 'Kopi terbaik untuk Anda'
-  })
-  .setLanguage('id')
-  .setThreeJS(true, 'kopi') // Aktifkan 3D dengan model kopi
-  .setTemplateType('basic')
-  .setOutputPath('./output/3d-website.html')
-  .generateToFile();
-```
-
-**Model 3D yang tersedia:**
-
-| Model | Deskripsi |
-|-------|-----------|
-| `kopi` | Objek cangkir kopi dengan piring dan sendok |
-| `laptop` | Model laptop dengan layar dan keyboard |
-| `buku` | Objek buku terbuka dengan halaman |
-| `logo` | Bentuk 3D abstrak untuk logo |
-| `abstract` | Geometri abstrak berputar |
-| `globe` | Bola dunia dengan garis lintang/bujur |
-
-## API Reference
-
-### WebTemplateGenerator
-
-Kelas utama untuk generate template.
-
-#### Constructor
-```typescript
-new WebTemplateGenerator(data?: TemplateData, config?: Partial<TemplateConfig>)
-```
-
-#### Methods
-
-- `setData(data: TemplateData): this` - Set data untuk template
-- `setConfig(config: Partial<TemplateConfig>): this` - Set konfigurasi
-- `setLanguage(language: 'id' | 'en'): this` - Set bahasa template
-- `setThreeJS(enable: boolean, model?: ThreeJSModelType): this` - Aktifkan/nonaktifkan 3D
-- `setThreeJSModel(model: ThreeJSModelType): this` - Set model 3D
-- `setTemplateType(type: 'basic' | 'business' | 'portfolio' | 'landing'): this` - Set tipe template
-- `setOutputPath(path: string): this` - Set path output
-- `generate(): GeneratedTemplate` - Generate template (return object)
-- `generateToFile(): GeneratedTemplate` - Generate dan simpan ke file
-
-#### Static Methods
-- `WebTemplateGenerator.getAvailableLanguages(): string[]` - Dapatkan daftar bahasa
-- `WebTemplateGenerator.getAvailableTemplates(): string[]` - Dapatkan daftar template
-- `WebTemplateGenerator.create(data, config): WebTemplateGenerator` - Factory method
-- `WebTemplateGenerator.generateQuick(data, language, outputPath): GeneratedTemplate` - Generate cepat
-
-### TemplateData Interface
+Saat memanggil `generateTemplate(data, config)` atau menggunakan `setConfig()`, kamu bisa mengatur berbagai opsi berikut:
 
 ```typescript
-interface TemplateData {
-  title?: string;
-  description?: string;
-  companyName?: string;
-  contactEmail?: string;
-  contactPhone?: string;
-  address?: string;
-  socialMedia?: {
-    facebook?: string;
-    twitter?: string;
-    instagram?: string;
-    linkedin?: string;
-  };
-  sections?: {
-    about?: boolean;
-    services?: boolean;
-    testimonials?: boolean;
-    contact?: boolean;
-    pricing?: boolean;
-  };
-  customContent?: Record<string, any>;
-}
-```
-
-### TemplateConfig Interface
-
-```typescript
-interface TemplateConfig {
-  language: 'id' | 'en';
-  templateType: 'basic' | 'business' | 'portfolio' | 'landing';
-  outputPath: string;
-  includeAssets?: boolean;
-  theme?: {
-    primaryColor?: string;
-    secondaryColor?: string;
-    fontFamily?: string;
-  };
-  threeJS?: ThreeJSConfig;
-}
-
-interface ThreeJSConfig {
-  enable: boolean;
-  model: 'kopi' | 'laptop' | 'buku' | 'logo' | 'abstract' | 'globe';
-}
-
-type ThreeJSModelType = ThreeJSConfig['model'];
-```
-
-## Template Syntax
-
-### Variables
-Gunakan `{{variable}}` untuk menampilkan data:
-
-```html
-<h1>{{welcome}}</h1>
-<p>{{description}}</p>
-```
-
-### Conditionals
-Gunakan `{{if condition}}` dan `{{endif}}` untuk conditional rendering:
-
-```html
-{{if sections.about}}
-<section id="about">
-  <!-- Konten tentang -->
-</section>
-{{endif}}
-```
-
-### Available Variables dalam Template
-
-| Variable | Deskripsi |
-|----------|-----------|
-| `{{welcome}}` | Teks welcome (tergantung bahasa) |
-| `{{title}}` | Judul halaman |
-| `{{description}}` | Deskripsi halaman |
-| `{{companyName}}` | Nama perusahaan |
-| `{{contactEmail}}` | Email kontak |
-| `{{contactPhone}}` | Telepon kontak |
-| `{{address}}` | Alamat |
-| `{{primaryColor}}` | Warna utama dari theme |
-| `{{secondaryColor}}` | Warna sekunder dari theme |
-| `{{fontFamily}}` | Font family dari theme |
-| `{{home}}`, `{{about}}`, `{{services}}`, dll | Terjemahan berdasarkan bahasa |
-
-## Menambahkan Bahasa Baru
-
-1. Buat file JSON baru di folder `locales/`
-2. Tambahkan terjemahan dengan format yang sama seperti `id.json` dan `en.json`
-3. File akan otomatis terload saat library diinisialisasi
-
-Contoh `locales/es.json`:
-```json
 {
-  "welcome": "Bienvenido",
-  "title": "Tu Página Web",
-  "description": "Esta es una página web creada con Web Template Generator"
+  // Bahasa template — teks bawaan (menu, tombol, footer, dll) otomatis berubah
+  language: 'id',  // 'id' = Indonesia | 'en' = English
+
+  // Jenis template
+  templateType: 'landing',  // 'basic' | 'business' | 'portfolio' | 'landing'
+
+  // Path output file (untuk generate ke file)
+  outputPath: './output/index.html',
+
+  // Apakah generate CSS & JS sebagai file terpisah
+  includeAssets: false,
+
+  // Target DOM element (untuk renderToDOM di browser)
+  domTarget: '#app',
+
+  // Tema / styling
+  theme: {
+    primaryColor: '#4F46E5',     // Warna utama (tombol, link, aksen)
+    secondaryColor: '#7C3AED',   // Warna sekunder
+    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+  },
+
+  // Konfigurasi Three.js (opsional)
+  threeJS: {
+    enable: true,                // true = aktifkan model 3D
+    model: 'kopi',              // Model 3D yang ditampilkan
+    backgroundColor: '0xf0f0f0', // Warna background canvas (hex number)
+    cameraPosition: { x: 5, y: 4, z: 5 }, // Posisi kamera
+    autoRotate: true             // Model otomatis berputar
+  }
 }
 ```
 
-## Menambahkan Template Baru
+### Pilihan Bahasa (`language`)
 
-1. Buat file HTML baru di folder `templates/`
-2. Gunakan syntax template seperti di atas
-3. Template akan otomatis tersedia melalui `WebTemplateGenerator.getAvailableTemplates()`
+| Nilai | Bahasa | Keterangan |
+|-------|--------|------------|
+| `'id'` | Indonesia | Menu: Beranda, Tentang, Layanan, Fitur, Kontak |
+| `'en'` | English | Menu: Home, About, Services, Features, Contact |
 
-## Contoh Lengkap
+Semua teks bawaan template (navigasi, judul section, tombol, footer) otomatis berubah sesuai bahasa yang dipilih. Konten dari data user tetap apa adanya — **tidak di-translate otomatis**.
 
-```javascript
-import WebTemplateGenerator from '@cherrylnh/web-template-generator';
+```typescript
+// Contoh: Bahasa Indonesia
+generateTemplate(data, { language: 'id' });
+// → Navbar: Beranda | Tentang | Layanan | Fitur | Kontak
+// → Footer: © 2026 Nama Perusahaan. Hak cipta dilindungi.
 
-// Contoh data lengkap
-const data = {
-  title: 'My Awesome Business',
-  description: 'Solusi digital terbaik untuk bisnis Anda',
-  companyName: 'Digital Solutions Inc.',
-  contactEmail: 'info@digitalsolutions.com',
-  contactPhone: '+62 21 1234 5678',
-  address: 'Jl. Sudirman No. 123, Jakarta',
-  socialMedia: {
-    facebook: 'https://facebook.com/digitalsolutions',
-    instagram: 'https://instagram.com/digitalsolutions',
-    linkedin: 'https://linkedin.com/company/digitalsolutions'
-  },
+// Contoh: Bahasa Inggris
+generateTemplate(data, { language: 'en' });
+// → Navbar: Home | About | Services | Features | Contact
+// → Footer: © 2026 Company Name. All rights reserved.
+```
+
+### Pilihan Template (`templateType`)
+
+| Nilai | Deskripsi |
+|-------|-----------|
+| `'basic'` | Template sederhana, cocok untuk halaman personal atau blog |
+| `'business'` | Template profesional untuk perusahaan atau startup |
+| `'portfolio'` | Template untuk menampilkan portofolio dan karya |
+| `'landing'` | Template landing page dengan hero section, fitur, dan CTA |
+
+### Pilihan Model Three.js (`threeJS.model`)
+
+| Nilai | Model | Deskripsi |
+|-------|-------|-----------|
+| `'kopi'` | ☕ Cangkir Kopi | Cangkir lengkap dengan cangkir, pegangan, dan piring |
+| `'laptop'` | 💻 Laptop | Laptop dengan layar, keyboard, dan touchpad |
+| `'buku'` | 📖 Buku | Buku terbuka dengan halaman dan teks |
+| `'logo'` | 🔮 Logo 3D | Bentuk geometris abstrak (sphere + torus orbiting) |
+| `'abstract'` | 💎 Geometri Abstrak | Icosahedron dengan efek wireframe dan partikel |
+| `'globe'` | 🌍 Globe | Bola dunia dengan garis lintang/bujur dan benua |
+
+```typescript
+// Aktifkan Three.js dengan model laptop
+generateTemplate(data, {
+  language: 'id',
+  templateType: 'landing',
+  threeJS: {
+    enable: true,
+    model: 'laptop',
+    backgroundColor: '0xf8fafc',
+    autoRotate: true
+  }
+});
+```
+
+**Tips**: Model 3D bisa di-rotate dengan mouse drag, dan di-zoom dengan scroll. Atur `autoRotate: false` kalau mau user kontrol penuh.
+
+---
+
+## 📋 Data Object
+
+Parameter pertama `generateTemplate(data, config)` adalah objek data yang isinya bebas. Beberapa field yang umum dipakai:
+
+```typescript
+{
+  // Identitas
+  companyName: 'Nama Perusahaan',
+  tagline: 'Tagline perusahaan kamu',
+
+  // Hero Section
+  heroTitle: 'Judul Besar di Atas',
+  heroSubtitle: 'Subtitle di bawah judul',
+  heroButtonText: 'Mulai Sekarang',
+  heroButtonLink: '#features',
+  heroImage: 'https://example.com/hero.jpg',
+  showHero: true,
+
+  // Konten
+  aboutText: 'Tentang perusahaan kamu...',
+  features: [
+    { title: 'Fitur 1', description: 'Deskripsi fitur 1' },
+    { title: 'Fitur 2', description: 'Deskripsi fitur 2' },
+    { title: 'Fitur 3', description: 'Deskripsi fitur 3' }
+  ],
+
+  // Section visibility
   sections: {
     about: true,
     services: true,
-    testimonials: false,
-    contact: true,
-    pricing: true
+    features: true,
+    contact: true
   },
-  customContent: {
-    tagline: 'Innovate. Create. Succeed.',
-    yearFounded: 2020
+
+  // Footer / Contact
+  email: 'halo@example.com',
+  phone: '+62 812-3456-7890',
+  address: 'Jakarta, Indonesia',
+
+  // Sosial media (muncul di footer)
+  socialMedia: {
+    instagram: 'https://instagram.com/kamu',
+    twitter: 'https://twitter.com/kamu',
+    linkedin: 'https://linkedin.com/in/kamu'
   }
-};
-
-// Generate dalam bahasa Indonesia
-const generatorID = new WebTemplateGenerator(data, {
-  language: 'id',
-  templateType: 'business',
-  outputPath: './output/id/index.html',
-  includeAssets: true,
-  theme: {
-    primaryColor: '#2563EB',
-    secondaryColor: '#059669',
-    fontFamily: "'Inter', sans-serif"
-  }
-});
-
-const resultID = generatorID.generateToFile();
-
-// Generate dalam bahasa Inggris
-const generatorEN = new WebTemplateGenerator(data, {
-  language: 'en',
-  templateType: 'business',
-  outputPath: './output/en/index.html',
-  includeAssets: true
-});
-
-const resultEN = generatorEN.generateToFile();
-
-console.log('Template Indonesia:', resultID.html.substring(0, 50) + '...');
-console.log('Template English:', resultEN.html.substring(0, 50) + '...');
+}
 ```
 
-### Contoh dengan Three.js 3D
+> **Catatan**: Field `TemplateData` bersifat fleksibel (`Record<string, any>`). Kamu bisa menambahkan field apa saja dan menggunakannya di template custom.
 
-```javascript
-import WebTemplateGenerator from '@cherrylnh/web-template-generator';
+---
 
-// Generate landing page dengan elemen 3D
-const generator = new WebTemplateGenerator(
+## 🎨 Contoh Lengkap
+
+### Landing Page Toko Kopi (Bahasa Indonesia + Model 3D)
+
+```typescript
+import { generateTemplateToFile } from '@cherrylnh/web-template-generator';
+
+generateTemplateToFile(
   {
-    companyName: 'Coffee House',
-    description: 'Pengalaman kopi premium',
-    contactEmail: 'hello@coffeehouse.com'
+    companyName: 'Kopi Nusantara',
+    tagline: 'Kopi Terbaik dari Sabang sampai Merauke',
+    heroTitle: 'Selamat Datang di Dunia Kopi',
+    heroSubtitle: 'Nikmati cita rasa kopi nusantara terbaik',
+    heroButtonText: 'Pesan Sekarang',
+    showHero: true,
+    aboutText: 'Kopi Nusantara adalah brand kopi lokal yang menghadirkan biji kopi pilihan dari seluruh Indonesia.',
+    features: [
+      { title: 'Biji Pilihan', description: '100% kopi arabika lokal berkualitas tinggi' },
+      { title: 'Roasting Segar', description: 'Dipanggang setiap hari untuk kesegaran optimal' },
+      { title: 'Pengiriman Cepat', description: 'Sampai di rumah Anda dalam 2-3 hari kerja' }
+    ],
+    sections: {
+      about: true,
+      services: true,
+      features: true,
+      contact: true
+    },
+    email: 'halo@kopinusantara.id',
+    phone: '+62 21-1234-5678',
+    socialMedia: {
+      instagram: 'https://instagram.com/kopinusantara'
+    }
   },
   {
     language: 'id',
     templateType: 'landing',
-    outputPath: './output/3d-landing.html',
+    outputPath: './output/kopi-nusantara.html',
     theme: {
-      primaryColor: '#8B4513',
-      secondaryColor: '#D2691E'
+      primaryColor: '#6F4E37',   // Warna kopi
+      secondaryColor: '#C4A882'  // Warna susu
+    },
+    threeJS: {
+      enable: true,
+      model: 'kopi',
+      backgroundColor: '0xfdf5e6',
+      autoRotate: true
     }
   }
 );
 
-// Aktifkan Three.js dengan model kopi
-generator.setThreeJS(true, 'kopi');
-generator.generateToFile();
-
-// Ganti model menjadi globe
-generator.setThreeJSModel('globe');
-generator.setOutputPath('./output/3d-globe.html');
-generator.generateToFile();
+console.log('✅ Halaman berhasil di-generate di ./output/kopi-nusantara.html');
 ```
 
-### Contoh Generate Semua Model 3D
+### Business Page English (Tanpa Three.js)
 
-```javascript
-import WebTemplateGenerator, { ThreeJSModule } from '@cherrylnh/web-template-generator';
+```typescript
+import { generateTemplate } from '@cherrylnh/web-template-generator';
 
-const models = ThreeJSModule.getAvailableModels();
-const data = { companyName: '3D Demo', description: 'Demo semua model' };
+const result = generateTemplate(
+  {
+    companyName: 'TechCorp',
+    tagline: 'Innovation at its finest',
+    heroTitle: 'Build the Future',
+    heroSubtitle: 'We create digital solutions that matter',
+    heroButtonText: 'Get Started',
+    showHero: true,
+    features: [
+      { title: 'Cloud Solutions', description: 'Scalable infrastructure for your business' },
+      { title: 'AI Integration', description: 'Smart automation powered by machine learning' },
+      { title: '24/7 Support', description: 'Always here when you need us' }
+    ]
+  },
+  {
+    language: 'en',
+    templateType: 'business',
+    theme: {
+      primaryColor: '#1E40AF',
+      secondaryColor: '#3B82F6'
+    }
+  }
+);
 
-models.forEach(model => {
-  WebTemplateGenerator.create(data)
-    .setLanguage('en')
-    .setThreeJS(true, model)
-    .setOutputPath(`./output/3d-${model}.html`)
-    .generateToFile();
-  
-  console.log(`Generated: 3d-${model}.html`);
-});
+console.log(result.html);
 ```
 
-## Lisensi
+---
 
-MIT
+## 🔧 API Reference
+
+### Fungsi Utama
+
+| Fungsi | Return | Deskripsi |
+|--------|--------|-----------|
+| `generateTemplate(data, config)` | `GeneratedTemplate` | Generate HTML string tanpa menyimpan ke file |
+| `generateTemplateToFile(data, config)` | `GeneratedTemplate` | Generate dan simpan ke file |
+| `renderToDOM(data, config, target?)` | `GeneratedTemplate` | Render langsung ke elemen DOM (browser only) |
+
+### `WebTemplateGenerator` Class
+
+| Method | Return | Deskripsi |
+|--------|--------|-----------|
+| `setData(data)` | `this` | Set data template (method chaining) |
+| `setLanguage('id' \| 'en')` | `this` | Set bahasa |
+| `setTemplateType(type)` | `this` | Set jenis template |
+| `setConfig(config)` | `this` | Set konfigurasi lengkap |
+| `setThreeJS(enable, model?)` | `this` | Aktifkan/nonaktifkan Three.js |
+| `setDomTarget(selector)` | `this` | Set target DOM element |
+| `generate()` | `GeneratedTemplate` | Generate HTML string |
+| `generateToFile()` | `GeneratedTemplate` | Generate & simpan ke file |
+| `renderToDOM(target?)` | `GeneratedTemplate` | Render ke DOM (browser) |
+
+### Static Methods
+
+| Method | Return | Deskripsi |
+|--------|--------|-----------|
+| `WebTemplateGenerator.getAvailableLanguages()` | `string[]` | Daftar bahasa tersedia (`['id', 'en']`) |
+| `WebTemplateGenerator.getAvailableTemplates()` | `string[]` | Daftar template tersedia |
+| `WebTemplateGenerator.getAvailableThreeJSModels()` | `string[]` | Daftar model 3D tersedia |
+| `WebTemplateGenerator.create(data, config)` | `WebTemplateGenerator` | Factory method |
+
+### `GeneratedTemplate` Object
+
+```typescript
+{
+  html: string;       // HTML string lengkap
+  css: string;        // CSS string (jika includeAssets: true)
+  js: string;         // JS string (jika includeAssets: true)
+  assets?: string[];  // Path file assets (jika includeAssets: true)
+}
+```
+
+---
+
+## 📁 Struktur Project
+
+```
+packages/@cherrylnh/web-template-generator/
+├── src/
+│   ├── index.ts              # Entry point & WebTemplateGenerator class
+│   ├── types.ts              # TypeScript types & interfaces
+│   ├── localization.ts       # Sistem i18n (multi-bahasa)
+│   ├── template-engine.ts    # Engine untuk generate HTML
+│   ├── threejs.ts            # Three.js module (model 3D)
+│   └── i18n/
+│       └── translations/
+│           ├── id.json       # Terjemahan bahasa Indonesia
+│           └── en.json       # Terjemahan bahasa Inggris
+├── templates/
+│   └── assets/               # File statis (CSS, gambar, dll)
+├── examples/
+│   └── basic-usage.ts        # Contoh penggunaan
+├── dist/                     # Output build (auto-generated)
+├── package.json
+├── tsconfig.json
+└── README.md                 # ← Kamu di sini!
+```
+
+---
+
+## 🤝 Kontribusi
+
+Library ini adalah bagian dari monorepo `cherry-kit`. Silakan ikuti konvensi yang sudah ada di project.
+
+---
+
+## 📄 License
+
+MIT © cherrylnh
