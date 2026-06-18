@@ -1,3 +1,10 @@
+export type ThreeJSModelType = 'kopi' | 'laptop' | 'buku' | 'logo' | 'abstract' | 'globe';
+
+export interface ThreeJSConfig {
+  enable: boolean;
+  model: ThreeJSModelType;
+}
+
 export interface TemplateData {
   title?: string;
   description?: string;
@@ -26,6 +33,7 @@ export interface TemplateConfig {
   templateType: 'basic' | 'business' | 'portfolio' | 'landing';
   outputPath: string;
   includeAssets?: boolean;
+  threeJS?: ThreeJSConfig;
   theme?: {
     primaryColor?: string;
     secondaryColor?: string;

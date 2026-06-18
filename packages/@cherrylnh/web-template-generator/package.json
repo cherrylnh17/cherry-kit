@@ -1,7 +1,7 @@
 {
   "name": "@cherrylnh/web-template-generator",
   "version": "0.1.0",
-  "description": "JavaScript/TypeScript library untuk generate template halaman web dengan multi-bahasa support",
+  "description": "JavaScript/TypeScript library untuk generate template halaman web dengan multi-bahasa support dan fitur 3D Three.js",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
@@ -30,15 +30,15 @@
     "i18n",
     "multi-language",
     "html",
-    "landing-page"
+    "landing-page",
+    "threejs",
+    "3d",
+    "webgl"
   ],
   "author": "Luqman Nur Hakim",
   "license": "MIT",
-  "dependencies": {
-    "fs-extra": "^11.2.0"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "@types/fs-extra": "^11.0.4",
     "@types/node": "^20.0.0",
     "typescript": "^5.0.0",
     "rollup": "^4.0.0",

@@ -1,5 +1,6 @@
 import { TemplateData, TemplateConfig } from './types';
 import { Localization } from './localization';
+import { ThreeJSModule } from './threejs';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -70,6 +71,18 @@ export class TemplateEngine {
     // Proses conditional statements {{if condition}} ... {{endif}}
     rendered = this.processConditionals(rendered, data);
 
+    // Inject Three.js jika enabled
+    if (config.threeJS?.enable) {
+      const threeJSContainer = ThreeJSModule.generateContainer(config.threeJS);
+      const threeJSScript = ThreeJSModule.generateScript(config.threeJS);
+      
+      // Inject container sebelum </body>
+      rendered = rendered.replace(
+        '</body>',
+        `${threeJSContainer}\n<script>${threeJSScript}</script>\n</body>`
+      );
+    }
+
     return rendered;
   }
 
@@ -79,7 +92,7 @@ export class TemplateEngine {
   private static processConditionals(template: string, data: TemplateData): string {
     const conditionalRegex = /\{\{if\s+([^}]+)\}\}([\s\S]*?)\{\{endif\}\}/g;
     
-    return template.replace(conditionalRegex, (match, condition, content) => {
+    return template.replace(conditionalRegex, (_match, condition, content) => {
       // Cek apakah kondisi terpenuhi
       const conditionValue = this.getConditionValue(condition.trim(), data);
       return conditionValue ? content : '';

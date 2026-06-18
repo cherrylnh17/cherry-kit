@@ -1,8 +1,9 @@
-import { TemplateData, TemplateConfig, GeneratedTemplate } from './types';
+import { TemplateData, TemplateConfig, GeneratedTemplate, ThreeJSConfig, ThreeJSModelType } from './types';
 import { TemplateEngine } from './template-engine';
 import { Localization } from './localization';
+import { ThreeJSModule } from './threejs';
 import * as path from 'path';
-import * as fs from 'fs-extra';
+import * as fs from 'fs';
 
 export class WebTemplateGenerator {
   private config: TemplateConfig;
@@ -45,6 +46,26 @@ export class WebTemplateGenerator {
    */
   setLanguage(language: 'id' | 'en'): this {
     this.config.language = language;
+    return this;
+  }
+
+  /**
+   * Aktifkan/nonaktifkan fitur Three.js 3D
+   */
+  setThreeJS(enable: boolean, model: ThreeJSModelType = 'kopi'): this {
+    this.config.threeJS = { enable, model };
+    return this;
+  }
+
+  /**
+   * Set model 3D Three.js
+   */
+  setThreeJSModel(model: ThreeJSModelType): this {
+    if (!this.config.threeJS) {
+      this.config.threeJS = { enable: true, model };
+    } else {
+      this.config.threeJS.model = model;
+    }
     return this;
   }
 
@@ -132,6 +153,16 @@ export class WebTemplateGenerator {
     if (!supportedTemplates.includes(this.config.templateType)) {
       throw new Error(`Unsupported template type: ${this.config.templateType}. Supported types: ${supportedTemplates.join(', ')}`);
     }
+
+    // Validasi Three.js config jika diaktifkan
+    if (this.config.threeJS?.enable) {
+      const supportedModels = ThreeJSModule.getAvailableModels();
+      if (!supportedModels.includes(this.config.threeJS.model)) {
+        throw new Error(
+          `Unsupported 3D model: ${this.config.threeJS.model}. Supported models: ${supportedModels.join(', ')}`
+        );
+      }
+    }
   }
 
   /**
@@ -143,9 +174,9 @@ export class WebTemplateGenerator {
 
     if (fs.existsSync(assetsDir)) {
       try {
-        fs.copySync(assetsDir, path.join(outputDir, 'assets'));
+        fs.cpSync(assetsDir, path.join(outputDir, 'assets'), { recursive: true });
         console.log(`Assets copied to: ${path.join(outputDir, 'assets')}`);
-      } catch (error) {
+      } catch (error: any) {
         console.warn('Failed to copy assets:', error.message);
       }
     }
@@ -170,8 +201,8 @@ export class WebTemplateGenerator {
 
     const files = fs.readdirSync(templatesDir);
     return files
-      .filter(file => file.endsWith('.html'))
-      .map(file => path.basename(file, '.html'));
+      .filter((file: string) => file.endsWith('.html'))
+      .map((file: string) => path.basename(file, '.html'));
   }
 
   /**
@@ -203,8 +234,8 @@ export class WebTemplateGenerator {
 export default WebTemplateGenerator;
 
 // Export utilitas
-export { TemplateEngine, Localization };
-export type { TemplateData, TemplateConfig, GeneratedTemplate };
+export { TemplateEngine, Localization, ThreeJSModule };
+export type { TemplateData, TemplateConfig, GeneratedTemplate, ThreeJSConfig, ThreeJSModelType };
 
 // Export fungsi helper untuk penggunaan langsung
 export function generateTemplate(

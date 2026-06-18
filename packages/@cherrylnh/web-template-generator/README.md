@@ -1,6 +1,6 @@
 # Web Template Generator
 
-Library JavaScript/TypeScript untuk generate template halaman web dengan fitur multi-bahasa (i18n).
+Library JavaScript/TypeScript untuk generate template halaman web dengan fitur multi-bahasa (i18n) dan 3D Three.js.
 
 ## Fitur
 
@@ -9,6 +9,7 @@ Library JavaScript/TypeScript untuk generate template halaman web dengan fitur m
 - ✅ **Customizable** - Warna, font, dan konten dapat disesuaikan
 - ✅ **Conditional rendering** - Support conditional statements dalam template
 - ✅ **Assets generation** - Generate file CSS dan JavaScript terpisah
+- ✅ **Three.js 3D Support** - Integrasi elemen 3D dengan berbagai model (kopi, laptop, buku, logo, abstract, globe)
 - ✅ **TypeScript support** - Full TypeScript definitions
 
 ## Instalasi
@@ -102,6 +103,35 @@ const result = WebTemplateGenerator.create()
   .generateToFile();
 ```
 
+### Menggunakan Fitur Three.js 3D
+
+```javascript
+import WebTemplateGenerator from '@cherrylnh/web-template-generator';
+
+// Template dengan elemen 3D model kopi
+const result = WebTemplateGenerator.create()
+  .setData({
+    companyName: 'Coffee Shop',
+    description: 'Kopi terbaik untuk Anda'
+  })
+  .setLanguage('id')
+  .setThreeJS(true, 'kopi') // Aktifkan 3D dengan model kopi
+  .setTemplateType('basic')
+  .setOutputPath('./output/3d-website.html')
+  .generateToFile();
+```
+
+**Model 3D yang tersedia:**
+
+| Model | Deskripsi |
+|-------|-----------|
+| `kopi` | Objek cangkir kopi dengan piring dan sendok |
+| `laptop` | Model laptop dengan layar dan keyboard |
+| `buku` | Objek buku terbuka dengan halaman |
+| `logo` | Bentuk 3D abstrak untuk logo |
+| `abstract` | Geometri abstrak berputar |
+| `globe` | Bola dunia dengan garis lintang/bujur |
+
 ## API Reference
 
 ### WebTemplateGenerator
@@ -118,6 +148,8 @@ new WebTemplateGenerator(data?: TemplateData, config?: Partial<TemplateConfig>)
 - `setData(data: TemplateData): this` - Set data untuk template
 - `setConfig(config: Partial<TemplateConfig>): this` - Set konfigurasi
 - `setLanguage(language: 'id' | 'en'): this` - Set bahasa template
+- `setThreeJS(enable: boolean, model?: ThreeJSModelType): this` - Aktifkan/nonaktifkan 3D
+- `setThreeJSModel(model: ThreeJSModelType): this` - Set model 3D
 - `setTemplateType(type: 'basic' | 'business' | 'portfolio' | 'landing'): this` - Set tipe template
 - `setOutputPath(path: string): this` - Set path output
 - `generate(): GeneratedTemplate` - Generate template (return object)
@@ -169,7 +201,15 @@ interface TemplateConfig {
     secondaryColor?: string;
     fontFamily?: string;
   };
+  threeJS?: ThreeJSConfig;
 }
+
+interface ThreeJSConfig {
+  enable: boolean;
+  model: 'kopi' | 'laptop' | 'buku' | 'logo' | 'abstract' | 'globe';
+}
+
+type ThreeJSModelType = ThreeJSConfig['model'];
 ```
 
 ## Template Syntax
@@ -288,6 +328,58 @@ const resultEN = generatorEN.generateToFile();
 
 console.log('Template Indonesia:', resultID.html.substring(0, 50) + '...');
 console.log('Template English:', resultEN.html.substring(0, 50) + '...');
+```
+
+### Contoh dengan Three.js 3D
+
+```javascript
+import WebTemplateGenerator from '@cherrylnh/web-template-generator';
+
+// Generate landing page dengan elemen 3D
+const generator = new WebTemplateGenerator(
+  {
+    companyName: 'Coffee House',
+    description: 'Pengalaman kopi premium',
+    contactEmail: 'hello@coffeehouse.com'
+  },
+  {
+    language: 'id',
+    templateType: 'landing',
+    outputPath: './output/3d-landing.html',
+    theme: {
+      primaryColor: '#8B4513',
+      secondaryColor: '#D2691E'
+    }
+  }
+);
+
+// Aktifkan Three.js dengan model kopi
+generator.setThreeJS(true, 'kopi');
+generator.generateToFile();
+
+// Ganti model menjadi globe
+generator.setThreeJSModel('globe');
+generator.setOutputPath('./output/3d-globe.html');
+generator.generateToFile();
+```
+
+### Contoh Generate Semua Model 3D
+
+```javascript
+import WebTemplateGenerator, { ThreeJSModule } from '@cherrylnh/web-template-generator';
+
+const models = ThreeJSModule.getAvailableModels();
+const data = { companyName: '3D Demo', description: 'Demo semua model' };
+
+models.forEach(model => {
+  WebTemplateGenerator.create(data)
+    .setLanguage('en')
+    .setThreeJS(true, model)
+    .setOutputPath(`./output/3d-${model}.html`)
+    .generateToFile();
+  
+  console.log(`Generated: 3d-${model}.html`);
+});
 ```
 
 ## Lisensi

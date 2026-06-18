@@ -1,4 +1,4 @@
-import WebTemplateGenerator, { TemplateData, TemplateConfig } from '../index';
+import WebTemplateGenerator, { TemplateData, TemplateConfig, ThreeJSModule } from '../index';
 import { Localization } from '../localization';
 import { TemplateEngine } from '../template-engine';
 
@@ -187,7 +187,7 @@ describe('TemplateEngine', () => {
       expect(rendered).toContain('<section>About</section>');
     });
 
-    it('should hide conditional sections when false', () => {
+  it('should hide conditional sections when false', () => {
       const template = '{{if about}}<section>About</section>{{endif}}';
       const data: TemplateData = {
         sections: { about: false }
@@ -201,5 +201,104 @@ describe('TemplateEngine', () => {
       const rendered = TemplateEngine.renderTemplate(template, data, config);
       expect(rendered).not.toContain('<section>About</section>');
     });
+
+    it('should inject Three.js canvas when enabled', () => {
+      const template = '<html><body><h1>Test</h1></body></html>';
+      const data: TemplateData = {};
+      const config: TemplateConfig = {
+        language: 'id',
+        templateType: 'basic',
+        outputPath: './test.html',
+        threeJS: {
+          enable: true,
+          model: 'kopi'
+        }
+      };
+
+      const rendered = TemplateEngine.renderTemplate(template, data, config);
+      expect(rendered).toContain('threejs-container');
+      expect(rendered).toContain('THREE');
+    });
+
+    it('should not inject Three.js canvas when disabled', () => {
+      const template = '<html><body><h1>Test</h1></body></html>';
+      const data: TemplateData = {};
+      const config: TemplateConfig = {
+        language: 'id',
+        templateType: 'basic',
+        outputPath: './test.html'
+      };
+
+      const rendered = TemplateEngine.renderTemplate(template, data, config);
+      expect(rendered).not.toContain('threejs-container');
+    });
+  });
+});
+
+describe('ThreeJSModule', () => {
+  describe('getAvailableModels', () => {
+    it('should return list of available models', () => {
+      const models = ThreeJSModule.getAvailableModels();
+      expect(Array.isArray(models)).toBe(true);
+      expect(models.length).toBeGreaterThan(0);
+      expect(models).toContain('kopi');
+      expect(models).toContain('laptop');
+      expect(models).toContain('buku');
+      expect(models).toContain('logo');
+      expect(models).toContain('abstract');
+      expect(models).toContain('globe');
+    });
+  });
+
+  describe('generateContainer', () => {
+    it('should generate HTML container for Three.js', () => {
+      const container = ThreeJSModule.generateContainer({ enable: true, model: 'kopi' });
+      expect(container).toContain('threejs-container');
+      expect(container).toContain('style');
+    });
+  });
+
+  describe('generateScript', () => {
+    it('should generate Three.js script', () => {
+      const script = ThreeJSModule.generateScript({ enable: true, model: 'kopi' });
+      expect(script).toContain('THREE');
+      expect(script).toContain('WebGLRenderer');
+      expect(script).toContain('PerspectiveCamera');
+      expect(script).toContain('Scene');
+    });
+
+    it('should include model-specific code for kopi', () => {
+      const script = ThreeJSModule.generateScript({ enable: true, model: 'kopi' });
+      expect(script).toContain('CylinderGeometry');
+      expect(script).toContain('torus');
+    });
+
+    it('should include model-specific code for globe', () => {
+      const script = ThreeJSModule.generateScript({ enable: true, model: 'globe' });
+      expect(script).toContain('SphereGeometry');
+      expect(script).toContain('RingGeometry');
+    });
+  });
+});
+
+describe('Three.js Integration', () => {
+  it('should support setThreeJS method chaining', () => {
+    const generator = new WebTemplateGenerator();
+    const result = generator.setThreeJS(true, 'kopi');
+    expect(result).toBe(generator);
+  });
+
+  it('should support setThreeJSModel method chaining', () => {
+    const generator = new WebTemplateGenerator();
+    generator.setThreeJS(true, 'kopi');
+    const result = generator.setThreeJSModel('globe');
+    expect(result).toBe(generator);
+  });
+
+  it('should throw error for unsupported 3D model', () => {
+    const generator = new WebTemplateGenerator({}, {
+      threeJS: { enable: true, model: 'invalid' as any }
+    });
+    expect(() => generator.generate()).toThrow('Unsupported 3D model');
   });
 });
